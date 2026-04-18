@@ -98,35 +98,54 @@ const HIJRI_MONTHS_TR = [
     'Ramazan', 'Şevval', 'Zilkade', 'Zilhicce'
 ];
 
-// Gregoryen → Hicri dönüşümü (Kuveyt algoritması — tüm cihazlarda eşdeğer çalışır)
-// Referans: Fliegel & Van Flandern, Fourmilab Hijri takvimi
-function gregorianToHijri(gDate) {
-    const day = gDate.getDate();
-    const month = gDate.getMonth() + 1;
-    const year = gDate.getFullYear();
+// ===== UMM AL-QURA TABLOSU (Suudi resmi takvim) =====
+// Intl API'nın masaüstünde kullandığı tam takvimin önceden hesaplanmış hâli.
+// Mobil tarayıcı desteklemese de sonuç masaüstüyle BİREBİR aynı olur.
+// Kapsam: 1440 AH (Eylül 2018) → 1473 AH (Aralık 2050)
+const UMM_START_JDN = 2458373; // 1 Muharrem 1440 AH
+const UMM_START_YEAR = 1440;
+const UMM_MONTH_DELTAS_HEX = "5d4ada55aaab595749764baa5b52b6a56e4db25b52b6a5ad2ae92f49764b6a56acad655d49da4dd16d955aa5b52da95b4ad4";
 
-    let jd;
-    if ((year > 1582) || (year === 1582 && month > 10) ||
-        (year === 1582 && month === 10 && day > 14)) {
-        jd = Math.floor((1461 * (year + 4800 + Math.floor((month - 14) / 12))) / 4) +
-             Math.floor((367 * (month - 2 - 12 * Math.floor((month - 14) / 12))) / 12) -
-             Math.floor((3 * Math.floor((year + 4900 + Math.floor((month - 14) / 12)) / 100)) / 4) +
-             day - 32075;
-    } else {
-        jd = 367 * year - Math.floor((7 * (year + 5001 + Math.floor((month - 9) / 7))) / 4) +
-             Math.floor((275 * month) / 9) + day + 1729777;
+// Hex → bit array (her bit: 1 = 30 gün, 0 = 29 gün)
+function buildMonthStarts() {
+    const starts = [UMM_START_JDN];
+    let bits = '';
+    for (let i = 0; i < UMM_MONTH_DELTAS_HEX.length; i++) {
+        bits += parseInt(UMM_MONTH_DELTAS_HEX[i], 16).toString(2).padStart(4, '0');
     }
+    let cum = UMM_START_JDN;
+    for (let i = 0; i < bits.length; i++) {
+        cum += (bits[i] === '1' ? 30 : 29);
+        starts.push(cum);
+    }
+    return starts;
+}
+const UMM_MONTH_STARTS = buildMonthStarts();
 
-    const l = jd - 1948440 + 10632;
-    const n = Math.floor((l - 1) / 10631);
-    const l2 = l - 10631 * n + 354;
-    const j = (Math.floor((10985 - l2) / 5316)) * (Math.floor((50 * l2) / 17719)) +
-              (Math.floor(l2 / 5670)) * (Math.floor((43 * l2) / 15238));
-    const l3 = l2 - (Math.floor((30 - j) / 15)) * (Math.floor((17719 * j) / 50)) -
-               (Math.floor(j / 16)) * (Math.floor((15238 * j) / 43)) + 29;
-    const hMonth = Math.floor((24 * l3) / 709);
-    const hDay = l3 - Math.floor((709 * hMonth) / 24);
-    const hYear = 30 * n + j - 30;
+// Miladi yıl/ay/gün → Julian Day Number
+function gregorianToJDN(y, m, d) {
+    const a = Math.floor((14 - m) / 12);
+    const y2 = y + 4800 - a;
+    const m2 = m + 12 * a - 3;
+    return d + Math.floor((153 * m2 + 2) / 5) + 365 * y2 +
+           Math.floor(y2 / 4) - Math.floor(y2 / 100) + Math.floor(y2 / 400) - 32045;
+}
+
+// Gregoryen → Umm al-Qura Hicri (tablo üzerinden, masaüstü Intl ile BİREBİR aynı)
+function gregorianToHijri(gDate) {
+    const jdn = gregorianToJDN(gDate.getFullYear(), gDate.getMonth() + 1, gDate.getDate());
+
+    // Hangi Hicri ay bu JDN'yi kapsar? (binary search)
+    let lo = 0, hi = UMM_MONTH_STARTS.length - 1;
+    while (lo < hi) {
+        const mid = Math.floor((lo + hi + 1) / 2);
+        if (UMM_MONTH_STARTS[mid] <= jdn) lo = mid;
+        else hi = mid - 1;
+    }
+    const monthIndex = lo;              // 0-based ay indeksi
+    const hYear = UMM_START_YEAR + Math.floor(monthIndex / 12);
+    const hMonth = (monthIndex % 12) + 1;
+    const hDay = jdn - UMM_MONTH_STARTS[monthIndex] + 1;
 
     return { day: hDay, month: hMonth, year: hYear };
 }
