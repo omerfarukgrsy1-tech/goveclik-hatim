@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hatim Takip Sistemi</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="app-header">
+        <div class="brand">
+            <h1>Hatim Takip</h1>
+            <p class="subtitle">Toplu Kuran-ı Kerim Hatim Sistemi</p>
+        </div>
+        <div class="clock-box">
+            <div class="clock-row">
+                <span class="label">Miladi</span>
+                <span id="gregorianDate">—</span>
+            </div>
+            <div class="clock-row">
+                <span class="label">Hicri</span>
+                <span id="hijriDate">—</span>
+            </div>
+            <div class="clock-row time">
+                <span class="label">Saat</span>
+                <span id="clock">—</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- İlerleme Paneli -->
+        <section class="card progress-card">
+            <h2>Toplam Hatim İlerlemesi</h2>
+            <div class="progress-bar-wrap">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="progress-info">
+                <span id="progressText">0 / 604 sayfa okundu</span>
+                <span id="progressPercent">%0</span>
+            </div>
+        </section>
+
+        <!-- Okuma Girişi -->
+        <section class="card input-card">
+            <h2>Okuduğun Sayfayı Kaydet</h2>
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="readerName">İsim</label>
+                    <input type="text" id="readerName" placeholder="Adınızı yazın" autocomplete="off" />
+                </div>
+                <div class="form-field">
+                    <label for="juzSelect">Cüz</label>
+                    <select id="juzSelect">
+                        <option value="">Cüz seçin...</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label for="pageSelect">Sayfa</label>
+                    <select id="pageSelect">
+                        <option value="">Önce cüz seçin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="actions">
+                <button id="submitBtn" class="btn btn-primary">Tamam — Okuduğumu Kaydet</button>
+                <p id="formMessage" class="form-message"></p>
+            </div>
+        </section>
+
+        <!-- Filtreler & Excel -->
+        <section class="card filters-card">
+            <div class="filters-row">
+                <h2>Okuma Geçmişi</h2>
+                <div class="filter-actions">
+                    <input type="text" id="filterName" placeholder="İsme göre ara..." />
+                    <input type="date" id="filterDate" />
+                    <button id="clearFilters" class="btn btn-ghost">Temizle</button>
+                    <button id="exportExcel" class="btn btn-success">Excel İndir</button>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>Tarih / Saat</th>
+                            <th>İsim</th>
+                            <th>Cüz</th>
+                            <th>Sayfa</th>
+                            <th>Hicri Tarih</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <tr><td colspan="6" class="empty">Henüz kayıt yok.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Cüz Durumu -->
+        <section class="card juz-card">
+            <h2>Cüzlere Göre Durum</h2>
+            <div id="juzGrid" class="juz-grid"></div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>Hatim Takip Sistemi &middot; GitHub Pages &middot; Firebase Firestore</p>
+    </footer>
+
+    <!-- SheetJS (Excel) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- Firebase (modular SDK v10) -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
