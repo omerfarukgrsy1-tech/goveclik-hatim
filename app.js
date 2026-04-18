@@ -152,29 +152,49 @@ function formatHijriManual(date) {
     const h = gregorianToHijri(date);
     const monthName = HIJRI_MONTHS_TR[h.month - 1] || '';
     const dayStr = String(h.day).padStart(2, '0');
-    return `${dayStr} ${monthName} ${h.year}`;
+    return `${dayStr} ${monthName}`; // YIL YOK
+}
+
+// Intl çıktısından yıl ve "MÖ/BC" gibi ek bilgileri temizle; ayın adı doğruysa bırak
+function cleanHijriString(str) {
+    if (!str) return null;
+    // MÖ / BC / AH temizle
+    let cleaned = str.replace(/M\.?Ö\.?|BC|AH|AD/gi, '').trim();
+    // "1447" gibi 3-4 haneli yıl sayılarını kaldır
+    cleaned = cleaned.replace(/\b\d{3,4}\b/g, '').trim();
+    // Sonda kalan virgül, noktalı virgül ve boşlukları temizle
+    cleaned = cleaned.replace(/[,;]+\s*$/, '').trim();
+    // Baştaki fazla boşluk/ayraçları da temizle
+    cleaned = cleaned.replace(/^[,;\s]+/, '').trim();
+    return cleaned || null;
 }
 
 function formatHijri(date) {
-    // 1. Önce Intl dene (masaüstünde Umm al-Qura verir — en doğrusu)
+    // 1. Önce Intl dene (masaüstünde Umm al-Qura verir)
     try {
         const fmt = new Intl.DateTimeFormat('tr-TR-u-ca-islamic-umalqura', {
-            day: '2-digit', month: 'long', year: 'numeric'
+            day: '2-digit', month: 'long'
         });
-        const result = fmt.format(date);
-        if (!isBadHijriResult(result)) return result;
-    } catch (_) { /* destek yok, devam */ }
+        const raw = fmt.format(date);
+        if (!isBadHijriResult(raw)) {
+            const cleaned = cleanHijriString(raw);
+            if (cleaned) return cleaned;
+        }
+    } catch (_) { /* devam */ }
 
     // 2. Alternatif: islamic (bazı tarayıcılarda)
     try {
         const fmt = new Intl.DateTimeFormat('tr-TR-u-ca-islamic', {
-            day: '2-digit', month: 'long', year: 'numeric'
+            day: '2-digit', month: 'long'
         });
-        const result = fmt.format(date);
-        if (!isBadHijriResult(result)) return result;
+        const raw = fmt.format(date);
+        if (!isBadHijriResult(raw)) {
+            const cleaned = cleanHijriString(raw);
+            if (cleaned) return cleaned;
+        }
     } catch (_) { /* devam */ }
 
-    // 3. Son çare: manuel hesaplama — her cihazda çalışır
+    // 3. Son çare: manuel hesaplama — her cihazda çalışır, yıl yok
     try {
         return formatHijriManual(date);
     } catch {
