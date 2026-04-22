@@ -3,7 +3,7 @@
 // ============================================================
 
 export const firebaseConfig = {
-    apiKey: "AIzaSyD8DhK5XPTnMPyshTCj-rEjBUSFk7vsGmg",
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
     authDomain: "govecli-hatim.firebaseapp.com",
     projectId: "govecli-hatim",
     storageBucket: "govecli-hatim.firebasestorage.app",
